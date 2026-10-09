@@ -1,0 +1,20 @@
+# Read-only HTTPS connectivity test for KRA eTIMS API.
+# Does not register devices, change system settings, or transmit credentials.
+$uri = 'https://etims-api.kra.go.ke/etims-api'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Write-Host "Testing HTTPS connection to $uri" -ForegroundColor Cyan
+try {
+    $response = Invoke-WebRequest -Uri $uri -UseBasicParsing -TimeoutSec 20 -ErrorAction Stop
+    Write-Host "HTTPS connected. HTTP status: $($response.StatusCode)" -ForegroundColor Green
+} catch {
+    $ex = $_.Exception
+    if ($ex.Response -and $ex.Response.StatusCode) {
+        Write-Host "Server replied with HTTP status: $([int]$ex.Response.StatusCode)" -ForegroundColor Yellow
+        Write-Host 'The secure connection worked; the diagnostic GET may not be supported.'
+    } else {
+        Write-Host "ERROR: $($ex.Message)" -ForegroundColor Red
+        if ($ex.InnerException) { Write-Host "DETAILS: $($ex.InnerException.Message)" }
+    }
+}
+Write-Host 'Press Enter to close.'
+[void][Console]::ReadLine()
